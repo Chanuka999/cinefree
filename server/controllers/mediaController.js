@@ -1,3 +1,4 @@
+import Media from "../models/Media.js";
 
 import { tmdbRequest, imageUrl } from "../config/tmdb.js";
 
@@ -101,11 +102,21 @@ export async function getMediaDetails(req, res, next) {
     ]);
 
     const normalized = normalizeMedia(item, type);
+    // Video URLs are stored separately from TMDB metadata. Only use records
+    // explicitly added to our own media collection.
+    const source = await Media.findOne({ tmdbId: Number(id), type, published: true }).lean();
 
     res.json({
       success: true,
       result: {
         ...normalized,
+        embedUrl: source?.embedUrl || "",
+        videoUrl: source?.videoUrl || "",
+        downloadUrl: source?.downloadUrl || "",
+        videoProvider: source?.videoProvider || "",
+        rights: source?.rights?.status
+          ? `Video rights status: ${source.rights.status}`
+          : normalized.rights,
         genres: item.genres?.map((genre) => genre.name) || [],
         runtime: item.runtime || null,
         numberOfSeasons: item.number_of_seasons || 0,

@@ -30,6 +30,12 @@ const mediaSchema = new mongoose.Schema(
     releaseYear: Number,
     genres: [String],
     rating: Number,
+    // Map a TMDB title to an authorized third-party video source.
+    tmdbId: { type: Number, index: true },
+    embedUrl: String,
+    videoUrl: String,
+    downloadUrl: String,
+    videoProvider: String,
 
     rights: {
       status: {
