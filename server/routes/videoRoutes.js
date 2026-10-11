@@ -1,26 +1,13 @@
 
 import express from "express";
 import { getPlayback, getDownload } from "../services/videoProvider.js";
+import { requireUser } from "../middleware/requireUser.js";
 
 const router = express.Router();
 
-// Replace with your existing authentication middleware.
-function requireUser(req, res, next) {
-  if (!req.user?.id) {
-    return res.status(401).json({
-      message: "Please sign in to continue.",
-    });
-  }
-
-  next();
-}
-
-// Replace these with database-backed lookups and entitlement checks.
+// Fail closed until a database-backed licensed asset mapping is implemented.
 async function resolveAuthorizedAsset(tmdbId, userId, action) {
-  // Find the mapping between TMDB ID and the provider's asset ID.
-  // Check regional availability, subscription and download rights.
-  // Return null when the asset is not authorized.
-  throw new Error("Connect resolveAuthorizedAsset to your database");
+  return null;
 }
 
 router.get("/:tmdbId/playback", requireUser, async (req, res) => {

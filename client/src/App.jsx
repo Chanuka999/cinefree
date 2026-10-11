@@ -8,6 +8,7 @@ import Details from "./pages/Details";
 import Watch from "./pages/Watch";
 import Watchlist from "./pages/Watchlist";
 import Admin from "./pages/Admin";
+import Login from "./pages/Login";
 
 export default function App() {
   const [watchlist, setWatchlist] = useState(() => {
@@ -54,6 +55,7 @@ export default function App() {
           element={<Details watchlist={watchlist} onToggleSave={onToggleSave} />}
         />
         <Route path="watch/:id" element={<Watch />} />
+         <Route path="login" element={<Login />} />
         <Route
           path="watchlist"
           element={<Watchlist watchlist={watchlist} onToggleSave={onToggleSave} />}
