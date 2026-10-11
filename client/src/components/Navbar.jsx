@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Clapperboard, Search, Bookmark, Menu, X } from "lucide-react";
+import { Clapperboard, Search, Bookmark, Menu, X, LogOut } from "lucide-react";
 
 const navItems = [
   { label: "Home", to: "/" },
@@ -14,6 +14,21 @@ export default function Navbar() {
   const [search, setSearch] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
+
+  const token = localStorage.getItem("cinefree-token");
+  const currentUser = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("cinefree-user") || "null");
+    } catch {
+      return null;
+    }
+  })();
+
+  function handleSignOut() {
+    localStorage.removeItem("cinefree-token");
+    localStorage.removeItem("cinefree-user");
+    navigate("/");
+  }
 
   function handleSearch(event) {
     event.preventDefault();
@@ -68,6 +83,37 @@ export default function Navbar() {
           <Bookmark size={20} />
         </Link>
 
+        {token ? (
+          <div className="hidden items-center gap-3 sm:flex">
+            <Link
+              to="/admin"
+              className="rounded-xl border border-violet-500/30 bg-violet-600/20 px-3 py-2 text-sm font-semibold text-violet-300 hover:bg-violet-600/30 hover:text-white"
+            >
+              Admin
+            </Link>
+            <div className="flex items-center gap-2 rounded-xl bg-white/5 px-3 py-1.5 text-xs text-slate-300">
+              <span className="grid size-6 place-items-center rounded-full bg-violet-600 font-bold text-white">
+                {currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : "U"}
+              </span>
+              <span className="max-w-[100px] truncate font-medium">{currentUser?.name || "User"}</span>
+            </div>
+            <button
+              onClick={handleSignOut}
+              title="Sign out"
+              className="rounded-xl p-2 text-slate-400 hover:bg-white/10 hover:text-rose-400"
+            >
+              <LogOut size={18} />
+            </button>
+          </div>
+        ) : (
+          <Link
+            to="/login"
+            className="hidden rounded-xl bg-violet-600 px-4 py-2 text-sm font-bold hover:bg-violet-500 sm:block"
+          >
+            Sign in
+          </Link>
+        )}
+
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           className="ml-auto rounded-xl p-2 hover:bg-white/10 md:ml-0 lg:hidden"
@@ -101,6 +147,38 @@ export default function Navbar() {
           <Link to="/watchlist" onClick={() => setMobileOpen(false)} className="block py-2">
             My Watchlist
           </Link>
+          {token ? (
+            <div className="border-t border-white/10 pt-3">
+              <div className="mb-3 flex items-center justify-between text-xs text-slate-400">
+                <span>Signed in as <strong className="text-white">{currentUser?.name || "User"}</strong></span>
+                <span className="rounded bg-violet-600/30 px-2 py-0.5 text-violet-300">{currentUser?.role || "user"}</span>
+              </div>
+              <Link
+                to="/admin"
+                onClick={() => setMobileOpen(false)}
+                className="block rounded-xl bg-violet-600/20 px-3 py-2 text-sm font-semibold text-violet-300 hover:bg-violet-600/30"
+              >
+                Admin Dashboard
+              </Link>
+              <button
+                onClick={() => {
+                  setMobileOpen(false);
+                  handleSignOut();
+                }}
+                className="mt-2 flex w-full items-center gap-2 py-2 text-sm text-rose-400 hover:text-rose-300"
+              >
+                <LogOut size={16} /> Sign out
+              </button>
+            </div>
+          ) : (
+            <Link
+              to="/login"
+              onClick={() => setMobileOpen(false)}
+              className="block py-2 text-violet-300 font-semibold"
+            >
+              Sign in
+            </Link>
+          )}
         </div>
       )}
     </header>

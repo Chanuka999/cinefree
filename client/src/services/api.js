@@ -53,3 +53,67 @@ export async function saveMediaSource(payload) {
   }
   return data;
 }
+
+export async function fetchAdminMediaList() {
+  const token = localStorage.getItem("cinefree-token");
+  const response = await fetch(`${API_URL}/media/admin/list`, {
+    headers: {
+      Accept: "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+  const data = await response.json();
+  if (!response.ok || !data.success) {
+    throw new Error(data.message || "Failed to load media list.");
+  }
+  return data;
+}
+
+export async function deleteAdminMediaSource(id) {
+  const token = localStorage.getItem("cinefree-token");
+  const response = await fetch(`${API_URL}/media/admin/source/${id}`, {
+    method: "DELETE",
+    headers: {
+      Accept: "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+  const data = await response.json();
+  if (!response.ok || !data.success) {
+    throw new Error(data.message || "Failed to delete media record.");
+  }
+  return data;
+}
+
+export async function fetchAdminUsers() {
+  const token = localStorage.getItem("cinefree-token");
+  const response = await fetch(`${API_URL}/auth/admin/users`, {
+    headers: {
+      Accept: "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+  const data = await response.json();
+  if (!response.ok || !data.success) {
+    throw new Error(data.message || "Failed to load registered users.");
+  }
+  return data;
+}
+
+export async function updateAdminUserRole(userId, role) {
+  const token = localStorage.getItem("cinefree-token");
+  const response = await fetch(`${API_URL}/auth/admin/users/${userId}/role`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ role }),
+  });
+  const data = await response.json();
+  if (!response.ok || !data.success) {
+    throw new Error(data.message || "Failed to update user role.");
+  }
+  return data;
+}
