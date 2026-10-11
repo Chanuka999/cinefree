@@ -143,3 +143,64 @@ export async function getMediaDetails(req, res, next) {
     next(error);
   }
 }
+
+
+// Create/update a video mapping for a TMDB title. The TMDB ID comes from the
+// selected search result, never from a title-string guess.
+export async function saveMediaSource(req, res, next) {
+  try {
+    const { tmdbId, type, embedUrl = "", videoUrl = "", downloadUrl = "", rightsStatus } = req.body || {};
+    const numericId = Number(tmdbId);
+    if (!Number.isSafeInteger(numericId) || numericId <= 0) {
+      return res.status(400).json({ success: false, message: "Select a valid TMDB result first." });
+    }
+    if (!["movie", "series"].includes(type)) {
+      return res.status(400).json({ success: false, message: "Type must be movie or series." });
+    }
+    const validUrl = (value) => {
+      if (!value) return true;
+      try { const url = new URL(value); return url.protocol === "https:" || url.protocol === "http:"; }
+      catch { return false; }
+    };
+    if (![embedUrl, videoUrl, downloadUrl].every((value) => typeof value === "string" && validUrl(value))) {
+      return res.status(400).json({ success: false, message: "Video URLs must be valid HTTP(S) URLs." });
+    }
+    if (!["public-domain", "licensed", "permission"].includes(rightsStatus)) {
+      return res.status(400).json({ success: false, message: "Choose the applicable video rights status." });
+    }
+
+    const apiType = type === "series" ? "tv" : "movie";
+    const item = await tmdbRequest(`/${apiType}/${numericId}`, { language: "en-US" });
+    const title = type === "movie" ? item.title : item.name;
+    if (!title) return res.status(404).json({ success: false, message: "TMDB title not found." });
+
+    const safeSlug = `${type}-${numericId}`;
+    const record = await Media.findOneAndUpdate(
+      { tmdbId: numericId, type },
+      {
+        $set: {
+          title,
+          slug: safeSlug,
+          type,
+          description: item.overview || "No description available.",
+          posterUrl: imageUrl(item.poster_path, "w500") || "https://placehold.co/500x750?text=No+Poster",
+          backdropUrl: imageUrl(item.backdrop_path, "w1280") || "",
+          releaseYear: Number((type === "movie" ? item.release_date : item.first_air_date)?.slice(0, 4)) || null,
+          genres: [],
+          rating: Number(item.vote_average || 0),
+          tmdbId: numericId,
+          embedUrl: embedUrl.trim(),
+          videoUrl: videoUrl.trim(),
+          downloadUrl: downloadUrl.trim(),
+          rights: { status: rightsStatus, verifiedAt: new Date() },
+          published: req.body.published === true,
+        },
+      },
+      { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true }
+    ).lean();
+
+    return res.status(200).json({ success: true, message: "Movie source saved.", result: record });
+  } catch (error) {
+    next(error);
+  }
+}
