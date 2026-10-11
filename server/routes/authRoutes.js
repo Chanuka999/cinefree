@@ -44,4 +44,50 @@ router.post("/login", limiter, async (req, res) => {
   }
 });
 router.get("/me", requireUser, (req, res) => res.json({ user: req.user }));
+
+router.get("/admin/users", requireUser, async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ success: false, message: "Admin access required." });
+    }
+    const users = await User.find().select("-passwordHash").sort({ createdAt: -1 }).lean();
+    const stats = {
+      totalUsers: users.length,
+      adminUsers: users.filter((u) => u.role === "admin").length,
+      regularUsers: users.filter((u) => u.role === "user").length,
+    };
+    return res.json({ success: true, stats, users });
+  } catch (error) {
+    console.error("Admin users fetch error:", error.message);
+    return res.status(500).json({ success: false, message: "Unable to retrieve users." });
+  }
+});
+
+router.patch("/admin/users/:id/role", requireUser, async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ success: false, message: "Admin access required." });
+    }
+    const { role } = req.body;
+    if (!["user", "admin"].includes(role)) {
+      return res.status(400).json({ success: false, message: "Role must be 'user' or 'admin'." });
+    }
+    if (req.user.id === req.params.id && role !== "admin") {
+      return res.status(400).json({ success: false, message: "You cannot revoke your own admin access." });
+    }
+    const updated = await User.findByIdAndUpdate(
+      req.params.id,
+      { role },
+      { new: true }
+    ).select("-passwordHash");
+    if (!updated) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+    return res.json({ success: true, message: `Updated role for ${updated.name} to ${role}.`, user: updated });
+  } catch (error) {
+    console.error("Admin user role update error:", error.message);
+    return res.status(500).json({ success: false, message: "Failed to update user role." });
+  }
+});
+
 export default router;

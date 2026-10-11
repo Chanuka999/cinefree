@@ -204,3 +204,50 @@ export async function saveMediaSource(req, res, next) {
     next(error);
   }
 }
+
+export async function getAdminMedia(req, res, next) {
+  try {
+    const items = await Media.find().sort({ updatedAt: -1, createdAt: -1 }).lean();
+
+    const movies = items.filter((i) => i.type === "movie");
+    const series = items.filter((i) => i.type === "series");
+
+    const stats = {
+      total: items.length,
+      moviesCount: movies.length,
+      seriesCount: series.length,
+      watchableCount: items.filter((i) => Boolean(i.embedUrl?.trim() || i.videoUrl?.trim())).length,
+      downloadableCount: items.filter((i) => Boolean(i.downloadUrl?.trim())).length,
+      watchableMoviesCount: movies.filter((i) => Boolean(i.embedUrl?.trim() || i.videoUrl?.trim())).length,
+      downloadableMoviesCount: movies.filter((i) => Boolean(i.downloadUrl?.trim())).length,
+      watchableSeriesCount: series.filter((i) => Boolean(i.embedUrl?.trim() || i.videoUrl?.trim())).length,
+      downloadableSeriesCount: series.filter((i) => Boolean(i.downloadUrl?.trim())).length,
+      publishedCount: items.filter((i) => i.published).length,
+    };
+
+    return res.status(200).json({
+      success: true,
+      stats,
+      results: items,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function deleteMediaSource(req, res, next) {
+  try {
+    const { id } = req.params;
+    const deleted = await Media.findByIdAndDelete(id);
+    if (!deleted) {
+      return res.status(404).json({ success: false, message: "Media record not found." });
+    }
+    return res.status(200).json({
+      success: true,
+      message: `Deleted "${deleted.title}" successfully.`,
+      result: deleted,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
