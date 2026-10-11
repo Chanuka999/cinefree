@@ -34,3 +34,22 @@ export function fetchMedia({
 export function fetchMediaDetails(type, id) {
   return request(`/media/${type}/${id}`);
 }
+
+
+export async function saveMediaSource(payload) {
+  const token = localStorage.getItem("cinefree-token");
+  const response = await fetch(`${API_URL}/media/admin/source`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await response.json();
+  if (!response.ok || !data.success) {
+    throw new Error(data.message || "Unable to save movie source.");
+  }
+  return data;
+}

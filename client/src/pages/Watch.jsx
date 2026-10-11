@@ -6,11 +6,14 @@ import { fetchMediaDetails } from "../services/api";
 // Only render iframe URLs from known video-hosting providers. Add a provider
 // here after checking its official embed URL format.
 const ALLOWED_EMBED_HOSTS = [
-  "youtube.com", "www.youtube.com", "youtube-nocookie.com", "www.youtube-nocookie.com",
-  "drive.google.com", "docs.google.com", "mega.nz", "www.mega.nz",
-  "vk.com", "www.vk.com", "player.vimeo.com", "vimeo.com",
+  "youtube.com", "www.youtube.com",
+  "youtube-nocookie.com", "www.youtube-nocookie.com",
+  "drive.google.com", "docs.google.com",
+  "mega.nz", "www.mega.nz",
+  "vk.com", "www.vk.com",
+  "player.vimeo.com", "vimeo.com",
+  "playmogo.com", "www.playmogo.com",
 ];
-
 function isAllowedEmbedUrl(value) {
   if (!value) return false;
   try {
