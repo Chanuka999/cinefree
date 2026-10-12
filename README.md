@@ -307,6 +307,11 @@ Set the production API URL before building:
 VITE_API_URL=https://api.example.com/api
 ```
 
+This value must be set in the Vercel project environment variables before
+deploying. Do not leave the local development value
+`http://localhost:5000/api` in a production build. The frontend cannot reach
+your development computer's `localhost` from Vercel or a phone.
+
 Then:
 
 ```bash

@@ -2,11 +2,22 @@
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 async function request(path) {
-  const response = await fetch(`${API_URL}${path}`);
-  const data = await response.json();
+  let response;
+  try {
+    response = await fetch(`${API_URL}${path}`);
+  } catch {
+    throw new Error(`API is unreachable at ${API_URL}. Check VITE_API_URL and the backend deployment.`);
+  }
+
+  const contentType = response.headers.get("content-type") || "";
+  const data = contentType.includes("application/json")
+    ? await response.json()
+    : {};
 
   if (!response.ok || !data.success) {
-    throw new Error(data.message || "Failed to load media");
+    throw new Error(
+      data.message || `API returned ${response.status} ${response.statusText || "error"}`
+    );
   }
 
   return data;

@@ -103,6 +103,7 @@ export default function Admin() {
       if (data.stats) setMediaStats(data.stats);
     } catch (err) {
       console.warn("Could not load media list:", err.message);
+      setError(`Could not load media from the API: ${err.message}`);
     } finally {
       setLoadingMedia(false);
     }
@@ -118,6 +119,7 @@ export default function Admin() {
       if (data.stats) setUserStats(data.stats);
     } catch (err) {
       console.warn("Could not load users list:", err.message);
+      setError(`Could not load users from the API: ${err.message}`);
     } finally {
       setLoadingUsers(false);
     }
