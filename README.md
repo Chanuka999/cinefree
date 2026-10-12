@@ -314,6 +314,12 @@ cd client
 npm run build
 ```
 
+For Vercel, set the project **Root Directory** to `client`. The
+`client/vercel.json` file contains the SPA rewrite required for direct routes
+such as `/admin`, `/watch/:id`, and `/title/:slug`. Without this rewrite,
+opening those routes directly can return a Vercel `404` even though client-side
+navigation works.
+
 ### Express API
 
 The server exports the Express app and detects `VERCEL` for serverless
