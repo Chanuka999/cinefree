@@ -1,9 +1,12 @@
 
 import { useEffect, useState } from "react";
-import { fetchMedia } from "../services/api";
-
 export default function useMedia(options = {}) {
-  const { type = "all", category = "popular", search = "" } = options;
+  const {
+    type = "all",
+    category = "popular",
+    search = "",
+    originalLanguage = "",
+  } = options;
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,6 +26,7 @@ export default function useMedia(options = {}) {
         });
 
         if (search.trim()) params.set("search", search.trim());
+        if (originalLanguage) params.set("originalLanguage", originalLanguage);
 
         const response = await fetch(
           `${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/media?${params}`,
@@ -48,7 +52,7 @@ export default function useMedia(options = {}) {
     loadMedia();
 
     return () => controller.abort();
-  }, [type, category, search]);
+  }, [type, category, search, originalLanguage]);
 
   return { items, loading, error };
 }

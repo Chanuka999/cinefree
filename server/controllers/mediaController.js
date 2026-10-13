@@ -2,8 +2,16 @@ import Media from "../models/Media.js";
 
 import { tmdbRequest, imageUrl } from "../config/tmdb.js";
 
+const languageNames = {
+  en: "English",
+  ta: "Tamil",
+  te: "Telugu",
+  ml: "Malayalam",
+};
+
 function normalizeMedia(item, type) {
   const isMovie = type === "movie";
+  const language = item.original_language || "";
 
   return {
     id: `${type}-${item.id}`,
@@ -15,6 +23,8 @@ function normalizeMedia(item, type) {
       (isMovie ? item.release_date : item.first_air_date)?.slice(0, 4)
     ) || null,
     rating: Number(item.vote_average?.toFixed(1) || 0),
+    language,
+    languageName: languageNames[language] || language.toUpperCase(),
     genreIds: item.genre_ids || [],
     genre: [],
     description: item.overview || "No description available.",
@@ -32,11 +42,19 @@ export async function getMedia(req, res, next) {
     const category = req.query.category || "popular";
     const page = Math.max(1, Math.min(500, Number(req.query.page) || 1));
     const search = String(req.query.search || "").trim();
+    const originalLanguage = String(req.query.originalLanguage || "").trim().toLowerCase();
+    const supportedLanguages = new Set(["en", "ta", "te", "ml"]);
 
     if (!["movie", "series", "all"].includes(type)) {
       return res.status(400).json({
         success: false,
         message: "Invalid media type",
+      });
+    }
+    if (originalLanguage && !supportedLanguages.has(originalLanguage)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid original language",
       });
     }
 
@@ -45,6 +63,7 @@ export async function getMedia(req, res, next) {
 
       if (search) return `/search/${mediaType === "movie" ? "movie" : "tv"}`;
       if (category === "trending") return `/trending/${mediaType === "movie" ? "movie" : "tv"}/week`;
+      if (originalLanguage) return `/discover/${mediaType === "movie" ? "movie" : "tv"}`;
 
       return `${prefix}/popular`;
     };
@@ -58,11 +77,13 @@ export async function getMedia(req, res, next) {
           language: "en-US",
           page,
           query: search || undefined,
+          with_original_language: !search ? originalLanguage || undefined : undefined,
+          sort_by: originalLanguage && !search ? "popularity.desc" : undefined,
         });
 
         return (data.results || []).map((item) =>
           normalizeMedia(item, apiType === "tv" ? "series" : "movie")
-        );
+        ).filter((item) => !originalLanguage || item.language === originalLanguage);
       })
     );
 

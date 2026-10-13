@@ -32,7 +32,9 @@ export default function MovieCard({ item, saved = false, onToggleSave }) {
             {item.title}
           </Link>
           <p className="mt-1 text-xs text-slate-400">
-            {item.year} · {item.genre.slice(0, 2).join(" · ")}
+            {item.year}
+            {item.languageName ? ` · ${item.languageName}` : ""}
+            {item.genre.length ? ` · ${item.genre.slice(0, 2).join(" · ")}` : ""}
           </p>
         </div>
         <button
