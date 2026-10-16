@@ -279,6 +279,13 @@ ads, anti-bot checks, `403` responses, and redirects cannot reliably be fixed
 by the CineFree frontend. Use a provider that supports iframe playback and
 mobile browsers.
 
+If both fields are configured, the watch page tries the direct `videoUrl`
+first and only falls back to `embedUrl` when the direct source cannot play.
+Therefore `videoUrl` must point to an authorized playable media response
+(such as an MP4 or HLS stream), not an advertising or landing page. The
+download field must likewise point to the provider's authorized download
+endpoint; an ad page cannot be converted into a movie download by the app.
+
 ## Admin workflow
 
 1. Register a normal account.

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, Download, ExternalLink, PlayCircle } from "lucide-react";
 import { fetchMediaDetails } from "../services/api";
 
@@ -35,8 +35,8 @@ function isHttpUrl(value) {
 
 export default function Watch() {
   const { id } = useParams();
-  const [params] = useSearchParams();
   const [item, setItem] = useState(null);
+  const [failedVideoUrl, setFailedVideoUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -66,11 +66,10 @@ export default function Watch() {
   if (loading) return <p className="p-16 text-center text-slate-400">Loading player...</p>;
   if (error || !item) return <p className="p-16 text-center text-rose-400">{error || "Title not found."}</p>;
 
-  const seasonNo = Number(params.get("season") || 1);
-  const episodeNo = Number(params.get("episode") || 1);
   const embedUrl = isAllowedEmbedUrl(item.embedUrl) ? item.embedUrl : "";
   const videoUrl = isHttpUrl(item.videoUrl) ? item.videoUrl : "";
   const downloadUrl = isHttpUrl(item.downloadUrl) ? item.downloadUrl : "";
+  const directVideoUrl = failedVideoUrl === videoUrl ? "" : videoUrl;
 
   return (
     <section className="mx-auto min-h-screen max-w-[1500px] px-4 py-8 md:px-10">
@@ -80,7 +79,19 @@ export default function Watch() {
       <div className="grid gap-6 xl:grid-cols-[1fr_300px]">
         <div className="min-w-0">
           <div className="overflow-hidden rounded-2xl border border-white/10 bg-black">
-            {embedUrl ? (
+            {directVideoUrl ? (
+              <video
+                controls
+                playsInline
+                preload="metadata"
+                poster={item.backdrop}
+                onError={() => setFailedVideoUrl(videoUrl)}
+                className="aspect-video w-full"
+              >
+                <source src={directVideoUrl} />
+                Your browser does not support video playback.
+              </video>
+            ) : embedUrl ? (
               <iframe
                 src={embedUrl}
                 title={`Watch ${item.title}`}
@@ -89,17 +100,14 @@ export default function Watch() {
                 allowFullScreen
                 referrerPolicy="strict-origin-when-cross-origin"
               />
-            ) : videoUrl ? (
-              <video controls playsInline preload="metadata" poster={item.backdrop} className="aspect-video w-full">
-                <source src={videoUrl} />
-                Your browser does not support video playback.
-              </video>
             ) : (
               <div className="flex aspect-video flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-[#050816] px-5 text-center">
                 <PlayCircle size={56} className="text-violet-400" />
                 <h2 className="mt-5 text-xl font-bold">Player source not configured</h2>
                 <p className="mt-2 max-w-lg text-sm leading-6 text-slate-400">
-                  Add a licensed provider embed URL or direct video URL to this title in the media database. Ordinary watch-page URLs may not work in an iframe; use the provider's official embed URL.
+                  {failedVideoUrl === videoUrl
+                    ? "The direct video URL did not return a playable video. Check the provider URL and use its official embed URL if one is available."
+                    : "Add a licensed provider embed URL or direct video URL to this title in the media database. Ordinary watch-page URLs may not work in an iframe; use the provider's official embed URL."}
                 </p>
               </div>
             )}
